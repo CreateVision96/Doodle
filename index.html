@@ -62,19 +62,23 @@
           <span class="settingTitle">Stroke</span>
           <div class="clrOptions" id="strokeClrs"></div>
         </div>
-        <div class="settings">
-          <span class="settingTile">Stroke width</span>
+        <div class="setting">
+          <span class="settingTitle">Stroke width</span>
 
-          <div class="widthOptions">
-            <button class="widthOptions">
-              <span class="widthline thin"></span>
-            </button>
-            <button class="widthOptions">
-              <span class="widthline medium"></span>
-            </button>
-            <button class="widthOptions">
-              <span class="widthline thick"></span>
-            </button>
+          <input
+            type="range"
+            class="widthSlider"
+            id="widthSlider"
+            min="1"
+            max="50"
+            value="2"
+          />
+
+          <div class="sliderValues">
+            <div class="sliderValues">
+              <span>1</span>
+              <span>100</span>
+            </div>
           </div>
         </div>
         <div class="setting">

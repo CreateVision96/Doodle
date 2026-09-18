@@ -29,6 +29,8 @@ const brush = {
   pressure: true,
 };
 
+const widthSlider = document.getElementById("widthSlider");
+
 const objects = [];
 let currentTool = "select";
 
@@ -89,7 +91,7 @@ function drawStroke(object) {
   if (object.points.length < 2) {
     return;
   }
-  ctx.strokeStyle = Object.color;
+  ctx.strokeStyle = object.color;
   ctx.globalAlpha = object.opacity;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -254,6 +256,10 @@ canvas.addEventListener("pointercancel", (event) => {
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
   }
+});
+
+widthSlider.addEventListener("input", () => {
+  brush.width = Number(widthSlider.value);
 });
 
 document.querySelectorAll(".tool").forEach((tool) => {
