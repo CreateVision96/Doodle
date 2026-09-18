@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doodle</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <main class="container">
+      <canvas id="canvas"></canvas>
+      <aside class="toolbar">
+        <div class="toolGroup">
+          <button class="tool active" id="selectTool" title="Select">
+            <img src="icons/select.svg" alt="Select" />
+          </button>
+
+          <button class="tool" id="drawTool" title="Draw">
+            <img src="icons/draw.svg" alt="Draw" />
+          </button>
+
+          <button class="tool" id="eraserTool" title="Eraser">
+            <img src="icons/eraser.svg" alt="Eraser" />
+          </button>
+
+          <button class="tool" id="lineTool" title="Line">
+            <img src="icons/line.svg" alt="Line" />
+          </button>
+
+          <button class="tool" id="rectangleTool" title="Rectangle">
+            <img src="icons/square.svg" alt="Rectangle" />
+          </button>
+
+          <button class="tool" id="circleTool" title="Circle">
+            <img src="icons/circle.svg" alt="Circle" />
+          </button>
+
+          <button class="tool" id="arrowTool" title="Arrow">
+            <img src="icons/arrow.svg" alt="Arrow" />
+          </button>
+
+          <button class="tool" id="textTool" title="Text">
+            <img src="icons/text.svg" alt="Text" />
+          </button>
+        </div>
+
+        <div class="historyTools">
+          <button class="tool" id="undoBtn" title="Undo">
+            <img src="icons/undo.svg" alt="Undo" />
+          </button>
+        </div>
+
+        <div class="toolGroup redoGroup">
+          <button class="tool" id="redoBtn" title="Redo">
+            <img src="icons/redo.svg" alt="Redo" />
+          </button>
+        </div>
+      </aside>
+      <div class="stylePanel">
+        <div class="setting">
+          <span class="settingTitle">Stroke</span>
+          <div class="clrOptions" id="strokeClrs"></div>
+        </div>
+        <div class="settings">
+          <span class="settingTile">Stroke width</span>
+
+          <div class="widthOptions">
+            <button class="widthOptions">
+              <span class="widthline thin"></span>
+            </button>
+            <button class="widthOptions">
+              <span class="widthline medium"></span>
+            </button>
+            <button class="widthOptions">
+              <span class="widthline thick"></span>
+            </button>
+          </div>
+        </div>
+        <div class="setting">
+          <span class="settingTitle">Pressure</span>
+          <button class="pressToggle" id="pressToggle">
+            <img src="icons/press.svg" />
+          </button>
+        </div>
+        <div class="setting opacitySetting">
+          <span class="settingTitle">Opacity</span>
+          <input
+            type="range"
+            class="opacitySlider"
+            min="0"
+            max="100"
+            value="100"
+          />
+          <div class="sliderValues">
+            <span>0</span>
+            <span>100</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="zoomControls">
+        <button class="zoomButton" id="zoomOut">-</button>
+        <span class="zoomValue" id="zoomValue">100%</span>
+        <button class="zoomButton" id="zoomIn">+</button>
+      </div>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>

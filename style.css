@@ -1,0 +1,373 @@
+@font-face {
+  font-family: "Poppins";
+  src: url("font/Poppins-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+:root {
+  --bg: #ececec;
+  --surface: #ffffff;
+  --surface-hover: #eeeeee;
+  --surface-active: #111111;
+  --border: #dedede;
+  --text: #333333;
+  --muted: #777777;
+  --control: #f5f5f5;
+  --toolbar-width: 58px;
+  --tool-size: 40px;
+  --panel-width: 202px;
+  --radius: 8px;
+  --icon-size: 21px;
+  --transition: 0.15s ease;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+}
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+#canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+}
+
+.toolbar {
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  width: var(--toolbar-width);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.toolGroup {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+
+.redoGroup {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.tool {
+  width: var(--tool-size);
+  height: var(--tool-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.tool img {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  display: block;
+  object-fit: contain;
+}
+
+.tool:hover {
+  background: var(--surface-hover);
+}
+
+.tool.active {
+  background: var(--surface-active);
+}
+
+.tool.active img {
+  filter: invert(1);
+}
+
+.tool:focus,
+.tool:focus-visible {
+  outline: none;
+}
+
+.historyTools {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  transition: background var(--transition);
+}
+
+.historyTools:hover {
+  background: var(--surface-hover);
+}
+
+.historyTools .tool {
+  width: var(--tool-size);
+  height: var(--tool-size);
+  background: transparent;
+}
+
+.historyTools .tool:hover {
+  background: transparent;
+}
+
+.stylePanel {
+  position: fixed;
+  right: 18px;
+  top: 22%;
+  width: var(--panel-width);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+
+  transform: translateY(-50%);
+  z-index: 10;
+}
+.setting {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.settingTitle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.clrOptions {
+  min-height: 28px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clrOption {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color);
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+.clrOption:hover {
+  transform: scale(1.08);
+}
+
+.clrOption.active {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.widthOptions {
+  display: flex;
+  gap: 6px;
+}
+
+.widthOption {
+  width: 48px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--control);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    border var(--transition);
+}
+
+.widthOption:hover {
+  background: var(--surface-hover);
+}
+
+.widthOption.active {
+  background: var(--surface-active);
+}
+
+.widthLine {
+  display: block;
+
+  width: 24px;
+
+  background: var(--text);
+  border-radius: var(--radius);
+}
+
+.widthOption.active .widthLine {
+  background: var(--surface);
+}
+
+.widthLine.thin {
+  height: 1px;
+}
+
+.widthLine.medium {
+  height: 2px;
+}
+
+.widthLine.thick {
+  height: 4px;
+}
+
+.pressToggle {
+  width: 48px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--control);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    border var(--transition);
+}
+
+.pressToggle:hover {
+  background: var(--surface-hover);
+}
+
+.pressToggle.active {
+  background: var(--surface-active);
+}
+
+.pressToggle img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.pressToggle.active img {
+  filter: invert(1);
+}
+
+.opacitySetting {
+  gap: 8px;
+}
+
+.opacitySlider {
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  border-radius: var(--radius);
+  background: var(--border);
+  cursor: pointer;
+}
+
+.opacitySlider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--radius);
+  background: var(--border);
+}
+
+.opacitySlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 17px;
+  height: 17px;
+  margin-top: -6px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.sliderValues {
+  display: flex;
+  justify-content: space-between;
+
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.zoomControls {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  height: 40px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 10;
+}
+
+.zoomButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.zoomButton:hover {
+  background: var(--surface-hover);
+}
+.zoomValue {
+  min-width: 48px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+}
