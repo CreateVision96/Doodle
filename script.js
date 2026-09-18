@@ -24,6 +24,11 @@ const pointer = {
   pressure: 0,
 };
 
+const brush = {
+  width: 2,
+  pressure: true,
+};
+
 const objects = [];
 let currentTool = "select";
 
@@ -84,18 +89,27 @@ function drawStroke(object) {
   if (object.points.length < 2) {
     return;
   }
-  ctx.beginPath();
-  ctx.moveTo(object.points[0].x, object.points[0].y);
-  for (let i = 1; i < object.points.length; i++) {
-    ctx.lineTo(object.points[i].x, object.points[i].y);
-  }
-  ctx.strokeStyle = object.color;
-  ctx.lineWidth = object.width;
+  ctx.strokeStyle = Object.color;
   ctx.globalAlpha = object.opacity;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  ctx.stroke();
+  for (let i = 1; i < object.points.length; i++) {
+    const previous = object.points[i - 1];
+    const point = object.points[i];
+
+    let width = object.width;
+    if (object.pressure) {
+      const pressure = point.pressure || 0.5;
+      width = object.width * (0.4 + pressure * 1.6);
+    }
+
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(previous.x, previous.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -136,8 +150,9 @@ function draw(event) {
   drawStroke({
     points: drawing.points,
     color: "#111111",
-    width: 2,
+    width: brush.width,
     opacity: 1,
+    pressure: brush.pressure,
   });
 }
 
@@ -150,8 +165,9 @@ function stopDrawing(pointerId) {
       type: "stroke",
       points: drawing.points,
       color: "#111111",
-      width: 2,
+      width: brush.width,
       opacity: 1,
+      pressure: brush.pressure,
     });
   }
   drawing.active = false;
