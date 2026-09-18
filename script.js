@@ -18,6 +18,12 @@ const drawing = {
   points: [],
 };
 
+const pointer = {
+  id: null,
+  type: "mouse",
+  pressure: 0,
+};
+
 const objects = [];
 let currentTool = "select";
 
@@ -80,7 +86,6 @@ function drawStroke(object) {
   }
   ctx.beginPath();
   ctx.moveTo(object.points[0].x, object.points[0].y);
-
   for (let i = 1; i < object.points.length; i++) {
     ctx.lineTo(object.points[i].x, object.points[i].y);
   }
@@ -100,21 +105,44 @@ function startDrawing(event) {
   }
   const point = screenToWorld(event.clientX, event.clientY);
   drawing.active = true;
-  drawing.points = [point];
+
+  pointer.id = event.pointerId;
+  pointer.type = event.pointerType;
+  pointer.pressure = event.pressure;
+
+  drawing.points = [
+    {
+      x: point.x,
+      y: point.y,
+      pressure: event.pressure,
+    },
+  ];
   canvas.style.cursor = "crosshair";
+  canvas.setPointerCapture(event.pointerId);
 }
 
 function draw(event) {
-  if (!drawing.active) {
+  if (!drawing.active || event.pointerId !== pointer.id) {
     return;
   }
   const point = screenToWorld(event.clientX, event.clientY);
-  drawing.points.push(point);
+  drawing.points.push({
+    x: point.x,
+    y: point.y,
+    pressure: event.pressure,
+  });
   render();
+
+  drawStroke({
+    points: drawing.points,
+    color: "#111111",
+    width: 2,
+    opacity: 1,
+  });
 }
 
-function stopDrawing() {
-  if (!drawing.active) {
+function stopDrawing(pointerId) {
+  if (!drawing.active || pointerId !== pointer.id) {
     return;
   }
   if (drawing.points.length > 1) {
@@ -128,6 +156,7 @@ function stopDrawing() {
   }
   drawing.active = false;
   drawing.points = [];
+  pointer.id = null;
   canvas.style.cursor = "default";
   render();
 }
@@ -167,14 +196,19 @@ function zoomCanvas(event) {
   render();
 }
 
-canvas.addEventListener("mousedown", (event) => {
+canvas.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  canvas.setPointerCapture(event.pointerId);
+
   if (event.button === 1) {
     startPan(event);
     return;
   }
   startDrawing(event);
 });
-canvas.addEventListener("mousemove", (event) => {
+
+canvas.addEventListener("pointermove", (event) => {
+  event.preventDefault();
   if (pan.active) {
     panCanvas(event);
     return;
@@ -182,19 +216,28 @@ canvas.addEventListener("mousemove", (event) => {
 
   draw(event);
 });
-canvas.addEventListener("mouseup", (event) => {
+
+canvas.addEventListener("pointerup", (event) => {
+  event.preventDefault();
   if (event.button === 1) {
     stopPan();
-    return;
+  } else {
+    stopDrawing(event.pointerId);
   }
-  stopDrawing();
+
+  if (canvas.hasPointerCapture(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
 });
-canvas.addEventListener("mouseleave", () => {
-  stopDrawing();
-  stopPan();
-});
-canvas.addEventListener("wheel", zoomCanvas, {
-  passive: false,
+
+canvas.addEventListener("pointercancel", (event) => {
+  stopDrawing(event.pointerId);
+  if (pan.active) {
+    stopPan();
+  }
+  if (canvas.hasPointerCapture(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
 });
 
 document.querySelectorAll(".tool").forEach((tool) => {
