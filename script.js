@@ -25,12 +25,12 @@ const pointer = {
 };
 
 const brush = {
-  width: 2,
+  width: 1,
   pressure: true,
 };
 
 const widthSlider = document.getElementById("widthSlider");
-
+const widthValue = document.getElementById("widthValue");
 const objects = [];
 let currentTool = "select";
 
@@ -69,7 +69,6 @@ function render() {
   setCameraTransform();
 
   ctx.fillStyle = "#ececec";
-
   ctx.fillRect(
     -camera.x / camera.zoom,
     -camera.y / camera.zoom,
@@ -85,12 +84,23 @@ function renderObjects() {
       drawStroke(object);
     }
   });
+
+  if (drawing.active) {
+    drawStroke({
+      points: drawing.points,
+      color: "#111111",
+      width: brush.width,
+      opacity: 1,
+      pressure: brush.pressure,
+    });
+  }
 }
 
 function drawStroke(object) {
   if (object.points.length < 2) {
     return;
   }
+
   ctx.strokeStyle = object.color;
   ctx.globalAlpha = object.opacity;
   ctx.lineCap = "round";
@@ -99,7 +109,6 @@ function drawStroke(object) {
   for (let i = 1; i < object.points.length; i++) {
     const previous = object.points[i - 1];
     const point = object.points[i];
-
     let width = object.width;
     if (object.pressure) {
       const pressure = point.pressure || 0.5;
@@ -119,9 +128,9 @@ function startDrawing(event) {
   if (currentTool !== "draw" || event.button !== 0) {
     return;
   }
+
   const point = screenToWorld(event.clientX, event.clientY);
   drawing.active = true;
-
   pointer.id = event.pointerId;
   pointer.type = event.pointerType;
   pointer.pressure = event.pressure;
@@ -148,14 +157,6 @@ function draw(event) {
     pressure: event.pressure,
   });
   render();
-
-  drawStroke({
-    points: drawing.points,
-    color: "#111111",
-    width: brush.width,
-    opacity: 1,
-    pressure: brush.pressure,
-  });
 }
 
 function stopDrawing(pointerId) {
@@ -172,10 +173,12 @@ function stopDrawing(pointerId) {
       pressure: brush.pressure,
     });
   }
+
   drawing.active = false;
   drawing.points = [];
   pointer.id = null;
   canvas.style.cursor = "default";
+
   render();
 }
 
@@ -199,6 +202,7 @@ function stopPan() {
   pan.active = false;
   canvas.style.cursor = "default";
 }
+
 function zoomCanvas(event) {
   event.preventDefault();
 
@@ -216,8 +220,8 @@ function zoomCanvas(event) {
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-  canvas.setPointerCapture(event.pointerId);
 
+  canvas.setPointerCapture(event.pointerId);
   if (event.button === 1) {
     startPan(event);
     return;
@@ -231,7 +235,6 @@ canvas.addEventListener("pointermove", (event) => {
     panCanvas(event);
     return;
   }
-
   draw(event);
 });
 
@@ -242,7 +245,6 @@ canvas.addEventListener("pointerup", (event) => {
   } else {
     stopDrawing(event.pointerId);
   }
-
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
   }
@@ -260,6 +262,7 @@ canvas.addEventListener("pointercancel", (event) => {
 
 widthSlider.addEventListener("input", () => {
   brush.width = Number(widthSlider.value);
+  widthValue.textContent = brush.width + " px";
 });
 
 document.querySelectorAll(".tool").forEach((tool) => {
