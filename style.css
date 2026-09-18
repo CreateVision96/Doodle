@@ -337,7 +337,6 @@ body {
   padding: 4px;
   display: flex;
   align-items: center;
-  gap: 2px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -348,25 +347,21 @@ body {
 .zoomButton {
   width: 32px;
   height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border: none;
   border-radius: var(--radius);
   background: transparent;
   color: var(--text);
-  font-family: "Poppins", sans-serif;
+  font-family: inherit;
   font-size: 18px;
-  font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition);
 }
 
 .zoomButton:hover {
   background: var(--surface-hover);
 }
+
 .zoomValue {
-  min-width: 48px;
+  width: 48px;
   text-align: center;
   color: var(--muted);
   font-size: 11px;
