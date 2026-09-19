@@ -37,7 +37,21 @@ const zoomIn = document.getElementById("zoomIn");
 const zoomValue = document.getElementById("zoomValue");
 
 const objects = [];
+const undoStack = [];
+const redoStack = [];
 let currentTool = "select";
+
+function undo() {
+  if (!objects.length) return;
+  redoStack.push(objects.pop());
+  render();
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  objects.push(redoStack.pop());
+  render();
+}
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
@@ -183,6 +197,7 @@ function stopDrawing(pointerId) {
   }
 
   if (drawing.points.length > 1) {
+    redoStack.length = 0;
     objects.push({
       type: currentTool,
       points: drawing.points,
@@ -253,6 +268,20 @@ function changeZoom(amount) {
 
 zoomOutt.addEventListener("click", () => changeZoom(-0.1));
 zoomIn.addEventListener("click", () => changeZoom(0.1));
+document.getElementById("undoBtn").addEventListener("click", undo);
+document.getElementById("redoBtn").addEventListener("click", redo);
+
+document.addEventListener("keydown", (event) => {
+  if (!event.ctrlKey) return;
+
+  if (event.key === "z" && event.shiftKey) {
+    redo();
+  } else if (event.key === "z") {
+    undo();
+  } else if (event.key === "y") {
+    redo();
+  }
+});
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
