@@ -31,6 +31,7 @@ const brush = {
 
 const widthSlider = document.getElementById("widthSlider");
 const widthValue = document.getElementById("widthValue");
+
 const objects = [];
 let currentTool = "select";
 
@@ -69,24 +70,25 @@ function render() {
   setCameraTransform();
 
   ctx.fillStyle = "#ececec";
+
   ctx.fillRect(
     -camera.x / camera.zoom,
     -camera.y / camera.zoom,
     canvas.width / camera.zoom,
     canvas.height / camera.zoom,
   );
+
   renderObjects();
 }
 
 function renderObjects() {
   objects.forEach((object) => {
-    if (object.type === "stroke") {
-      drawStroke(object);
-    }
+    drawStroke(object);
   });
 
   if (drawing.active) {
     drawStroke({
+      type: currentTool,
       points: drawing.points,
       color: "#111111",
       width: brush.width,
@@ -101,15 +103,24 @@ function drawStroke(object) {
     return;
   }
 
-  ctx.strokeStyle = object.color;
   ctx.globalAlpha = object.opacity;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+  if (object.type === "eraser") {
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.strokeStyle = "#000000";
+  } else {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.strokeStyle = object.color;
+  }
+
   for (let i = 1; i < object.points.length; i++) {
     const previous = object.points[i - 1];
     const point = object.points[i];
+
     let width = object.width;
+
     if (object.pressure) {
       const pressure = point.pressure || 0.5;
       width = object.width * (0.4 + pressure * 1.6);
@@ -121,16 +132,23 @@ function drawStroke(object) {
     ctx.lineTo(point.x, point.y);
     ctx.stroke();
   }
+
   ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
 }
 
 function startDrawing(event) {
-  if (currentTool !== "draw" || event.button !== 0) {
+  if (
+    (currentTool !== "draw" && currentTool !== "eraser") ||
+    event.button !== 0
+  ) {
     return;
   }
 
   const point = screenToWorld(event.clientX, event.clientY);
+
   drawing.active = true;
+
   pointer.id = event.pointerId;
   pointer.type = event.pointerType;
   pointer.pressure = event.pressure;
@@ -142,20 +160,26 @@ function startDrawing(event) {
       pressure: event.pressure,
     },
   ];
+
   canvas.style.cursor = "crosshair";
   canvas.setPointerCapture(event.pointerId);
+
+  render();
 }
 
 function draw(event) {
   if (!drawing.active || event.pointerId !== pointer.id) {
     return;
   }
+
   const point = screenToWorld(event.clientX, event.clientY);
+
   drawing.points.push({
     x: point.x,
     y: point.y,
     pressure: event.pressure,
   });
+
   render();
 }
 
@@ -163,9 +187,10 @@ function stopDrawing(pointerId) {
   if (!drawing.active || pointerId !== pointer.id) {
     return;
   }
+
   if (drawing.points.length > 1) {
     objects.push({
-      type: "stroke",
+      type: currentTool,
       points: drawing.points,
       color: "#111111",
       width: brush.width,
@@ -185,6 +210,7 @@ function stopDrawing(pointerId) {
 function panCanvas(event) {
   camera.x = event.clientX - pan.startX;
   camera.y = event.clientY - pan.startY;
+
   render();
 }
 
@@ -192,9 +218,11 @@ function startPan(event) {
   if (event.button !== 1) {
     return;
   }
+
   pan.active = true;
   pan.startX = event.clientX - camera.x;
   pan.startY = event.clientY - camera.y;
+
   canvas.style.cursor = "grabbing";
 }
 
@@ -208,13 +236,17 @@ function zoomCanvas(event) {
 
   const mouseX = event.clientX;
   const mouseY = event.clientY;
+
   const worldPosition = screenToWorld(mouseX, mouseY);
+
   const zoomAmount = event.deltaY < 0 ? 1.1 : 0.9;
 
   camera.zoom *= zoomAmount;
   camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 5);
+
   camera.x = mouseX - worldPosition.x * camera.zoom;
   camera.y = mouseY - worldPosition.y * camera.zoom;
+
   render();
 }
 
@@ -222,29 +254,35 @@ canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
 
   canvas.setPointerCapture(event.pointerId);
+
   if (event.button === 1) {
     startPan(event);
     return;
   }
+
   startDrawing(event);
 });
 
 canvas.addEventListener("pointermove", (event) => {
   event.preventDefault();
+
   if (pan.active) {
     panCanvas(event);
     return;
   }
+
   draw(event);
 });
 
 canvas.addEventListener("pointerup", (event) => {
   event.preventDefault();
+
   if (event.button === 1) {
     stopPan();
   } else {
     stopDrawing(event.pointerId);
   }
+
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
   }
@@ -252,12 +290,18 @@ canvas.addEventListener("pointerup", (event) => {
 
 canvas.addEventListener("pointercancel", (event) => {
   stopDrawing(event.pointerId);
+
   if (pan.active) {
     stopPan();
   }
+
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
   }
+});
+
+canvas.addEventListener("wheel", zoomCanvas, {
+  passive: false,
 });
 
 widthSlider.addEventListener("input", () => {
@@ -270,13 +314,17 @@ document.querySelectorAll(".tool").forEach((tool) => {
     if (tool.id === "undoBtn" || tool.id === "redoBtn") {
       return;
     }
+
     document.querySelectorAll(".tool").forEach((item) => {
       item.classList.remove("active");
     });
+
     tool.classList.add("active");
+
     currentTool = tool.id.replace("Tool", "");
   });
 });
 
 window.addEventListener("resize", resizeCanvas);
+
 resizeCanvas();
