@@ -32,6 +32,10 @@ const brush = {
 const widthSlider = document.getElementById("widthSlider");
 const widthValue = document.getElementById("widthValue");
 
+const zoomOutt = document.getElementById("zoomOut");
+const zoomIn = document.getElementById("zoomIn");
+const zoomValue = document.getElementById("zoomValue");
+
 const objects = [];
 let currentTool = "select";
 
@@ -70,7 +74,6 @@ function render() {
   setCameraTransform();
 
   ctx.fillStyle = "#ececec";
-
   ctx.fillRect(
     -camera.x / camera.zoom,
     -camera.y / camera.zoom,
@@ -106,7 +109,6 @@ function drawStroke(object) {
   ctx.globalAlpha = object.opacity;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-
   if (object.type === "eraser") {
     ctx.globalCompositeOperation = "destination-out";
     ctx.strokeStyle = "#000000";
@@ -118,14 +120,11 @@ function drawStroke(object) {
   for (let i = 1; i < object.points.length; i++) {
     const previous = object.points[i - 1];
     const point = object.points[i];
-
     let width = object.width;
-
     if (object.pressure) {
       const pressure = point.pressure || 0.5;
       width = object.width * (0.4 + pressure * 1.6);
     }
-
     ctx.lineWidth = width;
     ctx.beginPath();
     ctx.moveTo(previous.x, previous.y);
@@ -146,9 +145,7 @@ function startDrawing(event) {
   }
 
   const point = screenToWorld(event.clientX, event.clientY);
-
   drawing.active = true;
-
   pointer.id = event.pointerId;
   pointer.type = event.pointerType;
   pointer.pressure = event.pressure;
@@ -160,10 +157,8 @@ function startDrawing(event) {
       pressure: event.pressure,
     },
   ];
-
   canvas.style.cursor = "crosshair";
   canvas.setPointerCapture(event.pointerId);
-
   render();
 }
 
@@ -179,7 +174,6 @@ function draw(event) {
     y: point.y,
     pressure: event.pressure,
   });
-
   render();
 }
 
@@ -198,7 +192,6 @@ function stopDrawing(pointerId) {
       pressure: brush.pressure,
     });
   }
-
   drawing.active = false;
   drawing.points = [];
   pointer.id = null;
@@ -236,19 +229,30 @@ function zoomCanvas(event) {
 
   const mouseX = event.clientX;
   const mouseY = event.clientY;
-
   const worldPosition = screenToWorld(mouseX, mouseY);
-
   const zoomAmount = event.deltaY < 0 ? 1.1 : 0.9;
-
   camera.zoom *= zoomAmount;
   camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 5);
-
   camera.x = mouseX - worldPosition.x * camera.zoom;
   camera.y = mouseY - worldPosition.y * camera.zoom;
 
+  updateZoomUI();
   render();
 }
+
+function updateZoomUI() {
+  zoomValue.textContent = `${Math.round(camera.zoom * 100)}%`;
+}
+
+function changeZoom(amount) {
+  camera.zoom += amount;
+  camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 5);
+  updateZoomUI();
+  render();
+}
+
+zoomOutt.addEventListener("click", () => changeZoom(-0.1));
+zoomIn.addEventListener("click", () => changeZoom(0.1));
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
@@ -282,7 +286,6 @@ canvas.addEventListener("pointerup", (event) => {
   } else {
     stopDrawing(event.pointerId);
   }
-
   if (canvas.hasPointerCapture(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
   }
@@ -314,17 +317,14 @@ document.querySelectorAll(".tool").forEach((tool) => {
     if (tool.id === "undoBtn" || tool.id === "redoBtn") {
       return;
     }
-
     document.querySelectorAll(".tool").forEach((item) => {
       item.classList.remove("active");
     });
 
     tool.classList.add("active");
-
     currentTool = tool.id.replace("Tool", "");
   });
 });
 
 window.addEventListener("resize", resizeCanvas);
-
 resizeCanvas();
