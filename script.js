@@ -394,3 +394,57 @@ document.querySelectorAll(".tool").forEach((tool) => {
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
+
+const menuBtn = document.getElementById("menuBtn");
+const menuPanel = document.getElementById("menuPanel");
+
+const newCanvas = document.getElementById("newCanvas");
+const exportBtn = document.getElementById("exportBtn");
+const clearBtn = document.getElementById("clearBtn");
+const shortcutsBtn = document.getElementById("shortcutsBtn");
+const abtBtn = document.getElementById("abtBtn");
+
+menuBtn.addEventListener("click", (event) => {
+  event.stopPropagation();
+  menuPanel.classList.toggle("active");
+});
+
+menuPanel.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
+
+document.addEventListener("click", () => {
+  menuPanel.classList.remove("active");
+});
+
+newCanvas.addEventListener("click", () => {
+  objects.length = 0;
+  redoStack.length = 0;
+
+  camera.x = 0;
+  camera.y = 0;
+  camera.zoom = 1;
+  updateZoomUI();
+  redraw = true;
+  render();
+
+  menuPanel.classList.remove("active");
+});
+
+exportBtn.addEventListener("click", () => {
+  const link = document.createElement("a");
+  link.download = "doodle.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  menuPanel.classList.remove("active");
+});
+
+clearBtn.addEventListener("click", () => {
+  if (objects.length === 0) return;
+
+  redoStack.length = 0;
+  objects.length = 0;
+  redraw = true;
+  render();
+  menuPanel.classList.remove("active");
+});

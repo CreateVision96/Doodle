@@ -9,6 +9,34 @@
 
   <body>
     <main class="container">
+      <button class="menuBtn" id="menuBtn" title="Menu">
+        <img src="icons/menu.svg" />
+      </button>
+
+      <div class="menuPanel" id="menuPanel">
+        <div class="menuHeader">Doodle</div>
+
+        <button class="menuItem" id="newCanvas">
+          <span>New Canvas</span>
+        </button>
+
+        <button class="menuItem" id="exportBtn">
+          <span>Export PNG</span>
+        </button>
+
+        <div class="menuDiv"></div>
+        <button class="menuItem" id="clearBtn">
+          <span>Clear Canvas</span>
+        </button>
+        <div class="menuDiv"></div>
+        <button class="menuItem" id="shortcutsBtn">
+          <span>Keyboard shortcuts</span>
+        </button>
+        <button class="menuItem" id="abtBtn">
+          <span>About</span>
+        </button>
+      </div>
+
       <canvas id="canvas"></canvas>
       <aside class="toolbar">
         <div class="toolGroup">
