@@ -1,5 +1,7 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const strokeCanvas = document.createElement("canvas");
+const strokeCtx = strokeCanvas.getContext("2d");
 
 const camera = {
   x: 0,
@@ -20,35 +22,35 @@ const drawing = {
 
 const pointer = {
   id: null,
-  type: "mouse",
-  pressure: 0,
 };
 
 const brush = {
   width: 1,
+  opacity: 1,
   pressure: true,
 };
 
 const widthSlider = document.getElementById("widthSlider");
 const widthValue = document.getElementById("widthValue");
+const opacitySlider = document.getElementById("opacitySlider");
+const opacityValue = document.getElementById("opacityValue");
 
 const zoomOutt = document.getElementById("zoomOut");
 const zoomIn = document.getElementById("zoomIn");
 const zoomValue = document.getElementById("zoomValue");
 
 const objects = [];
-const undoStack = [];
 const redoStack = [];
 let currentTool = "select";
 
 function undo() {
-  if (!objects.length) return;
+  if (objects.length === 0) return;
   redoStack.push(objects.pop());
   render();
 }
 
 function redo() {
-  if (!redoStack.length) return;
+  if (redoStack.length === 0) return;
   objects.push(redoStack.pop());
   render();
 }
@@ -56,6 +58,8 @@ function redo() {
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  strokeCanvas.width = canvas.width;
+  strokeCanvas.height = canvas.height;
 
   render();
 }
@@ -64,13 +68,6 @@ function screenToWorld(x, y) {
   return {
     x: (x - camera.x) / camera.zoom,
     y: (y - camera.y) / camera.zoom,
-  };
-}
-
-function worldToScreen(x, y) {
-  return {
-    x: x * camera.zoom + camera.x,
-    y: y * camera.zoom + camera.y,
   };
 }
 
@@ -109,7 +106,7 @@ function renderObjects() {
       points: drawing.points,
       color: "#111111",
       width: brush.width,
-      opacity: 1,
+      opacity: brush.opacity,
       pressure: brush.pressure,
     });
   }
@@ -120,16 +117,15 @@ function drawStroke(object) {
     return;
   }
 
-  ctx.globalAlpha = object.opacity;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  if (object.type === "eraser") {
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.strokeStyle = "#000000";
-  } else {
-    ctx.globalCompositeOperation = "source-over";
-    ctx.strokeStyle = object.color;
-  }
+  strokeCtx.setTransform(1, 0, 0, 1, 0, 0);
+  strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
+  strokeCtx.setTransform(camera.zoom, 0, 0, camera.zoom, camera.x, camera.y);
+
+  strokeCtx.lineCap = "round";
+  strokeCtx.lineJoin = "round";
+  strokeCtx.globalAlpha = 1;
+
+  strokeCtx.strokeStyle = object.type === "eraser" ? "#000000" : object.color;
 
   for (let i = 1; i < object.points.length; i++) {
     const previous = object.points[i - 1];
@@ -139,13 +135,23 @@ function drawStroke(object) {
       const pressure = point.pressure || 0.5;
       width = object.width * (0.4 + pressure * 1.6);
     }
-    ctx.lineWidth = width;
-    ctx.beginPath();
-    ctx.moveTo(previous.x, previous.y);
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
+    strokeCtx.lineWidth = width;
+    strokeCtx.beginPath();
+    strokeCtx.moveTo(previous.x, previous.y);
+    strokeCtx.lineTo(point.x, point.y);
+    strokeCtx.stroke();
   }
 
+  ctx.globalAlpha = object.opacity;
+  if (object.type === "eraser") {
+    ctx.globalCompositeOperation = "destination-out";
+  } else {
+    ctx.globalCompositeOperation = "source-over";
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(strokeCanvas, 0, 0);
+
+  setCameraTransform();
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = "source-over";
 }
@@ -161,8 +167,6 @@ function startDrawing(event) {
   const point = screenToWorld(event.clientX, event.clientY);
   drawing.active = true;
   pointer.id = event.pointerId;
-  pointer.type = event.pointerType;
-  pointer.pressure = event.pressure;
 
   drawing.points = [
     {
@@ -203,7 +207,7 @@ function stopDrawing(pointerId) {
       points: drawing.points,
       color: "#111111",
       width: brush.width,
-      opacity: 1,
+      opacity: brush.opacity,
       pressure: brush.pressure,
     });
   }
@@ -273,12 +277,16 @@ document.getElementById("redoBtn").addEventListener("click", redo);
 
 document.addEventListener("keydown", (event) => {
   if (!event.ctrlKey) return;
-
-  if (event.key === "z" && event.shiftKey) {
-    redo();
-  } else if (event.key === "z") {
-    undo();
-  } else if (event.key === "y") {
+  if (event.key.toLowerCase() === "z") {
+    event.preventDefault();
+    if (event.shiftKey) {
+      redo();
+    } else {
+      undo();
+    }
+  }
+  if (event.key.toLowerCase() === "y") {
+    event.preventDefault();
     redo();
   }
 });
@@ -341,6 +349,10 @@ widthSlider.addEventListener("input", () => {
   widthValue.textContent = brush.width + " px";
 });
 
+opacitySlider.addEventListener("input", () => {
+  brush.opacity = Number(opacitySlider.value) / 100;
+  opacityValue.textContent = opacitySlider.value + "%";
+});
 document.querySelectorAll(".tool").forEach((tool) => {
   tool.addEventListener("click", () => {
     if (tool.id === "undoBtn" || tool.id === "redoBtn") {
