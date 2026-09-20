@@ -139,7 +139,7 @@ body {
 .stylePanel {
   position: fixed;
   right: 18px;
-  top: 50%;
+  top: 46%;
   width: 62px;
   display: flex;
   flex-direction: column;
@@ -148,7 +148,6 @@ body {
   z-index: 10;
 }
 
-.stylePanel .setting:first-child,
 .stylePanel .setting:nth-child(3) {
   display: none;
 }
@@ -252,4 +251,34 @@ body {
   text-align: center;
   color: var(--muted);
   font-size: 11px;
+}
+
+.colorSetting {
+  height: 80px;
+  padding: 10px;
+  gap: 8px;
+}
+
+.settingClr {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.ClrBtn {
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: #111;
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+.ClrBtn:hover {
+  transform: scale(1.05);
+}
+#colorPicker {
+  display: none;
 }

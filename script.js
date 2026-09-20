@@ -3,6 +3,8 @@ const ctx = canvas.getContext("2d");
 const strokeCanvas = document.createElement("canvas");
 const strokeCtx = strokeCanvas.getContext("2d");
 
+let redraw = true;
+
 const camera = {
   x: 0,
   y: 0,
@@ -27,6 +29,7 @@ const pointer = {
 const brush = {
   width: 1,
   opacity: 1,
+  color: "#111111",
   pressure: true,
 };
 
@@ -39,6 +42,20 @@ const zoomOutt = document.getElementById("zoomOut");
 const zoomIn = document.getElementById("zoomIn");
 const zoomValue = document.getElementById("zoomValue");
 
+const ClrBtn = document.getElementById("ClrBtn");
+const colorPicker = document.getElementById("colorPicker");
+
+ClrBtn.addEventListener("click", () => {
+  colorPicker.click();
+});
+
+colorPicker.addEventListener("input", () => {
+  brush.color = colorPicker.value;
+  ClrBtn.style.background = brush.color;
+});
+
+ClrBtn.style.background = brush.color;
+
 const objects = [];
 const redoStack = [];
 let currentTool = "select";
@@ -46,12 +63,14 @@ let currentTool = "select";
 function undo() {
   if (objects.length === 0) return;
   redoStack.push(objects.pop());
+  redraw = true;
   render();
 }
 
 function redo() {
   if (redoStack.length === 0) return;
   objects.push(redoStack.pop());
+  redraw = true;
   render();
 }
 
@@ -61,6 +80,7 @@ function resizeCanvas() {
   strokeCanvas.width = canvas.width;
   strokeCanvas.height = canvas.height;
 
+  redraw = true;
   render();
 }
 
@@ -81,6 +101,7 @@ function clearCanvas() {
 }
 
 function render() {
+  if (!redraw && !drawing.active) return;
   clearCanvas();
   setCameraTransform();
 
@@ -93,8 +114,8 @@ function render() {
   );
 
   renderObjects();
+  redraw = false;
 }
-
 function renderObjects() {
   objects.forEach((object) => {
     drawStroke(object);
@@ -104,7 +125,7 @@ function renderObjects() {
     drawStroke({
       type: currentTool,
       points: drawing.points,
-      color: "#111111",
+      color: brush.color,
       width: brush.width,
       opacity: brush.opacity,
       pressure: brush.pressure,
@@ -177,6 +198,7 @@ function startDrawing(event) {
   ];
   canvas.style.cursor = "crosshair";
   canvas.setPointerCapture(event.pointerId);
+  redraw = true;
   render();
 }
 
@@ -192,6 +214,7 @@ function draw(event) {
     y: point.y,
     pressure: event.pressure,
   });
+  redraw = true;
   render();
 }
 
@@ -205,7 +228,7 @@ function stopDrawing(pointerId) {
     objects.push({
       type: currentTool,
       points: drawing.points,
-      color: "#111111",
+      color: brush.color,
       width: brush.width,
       opacity: brush.opacity,
       pressure: brush.pressure,
@@ -222,7 +245,7 @@ function stopDrawing(pointerId) {
 function panCanvas(event) {
   camera.x = event.clientX - pan.startX;
   camera.y = event.clientY - pan.startY;
-
+  redraw = true;
   render();
 }
 
@@ -256,6 +279,7 @@ function zoomCanvas(event) {
   camera.y = mouseY - worldPosition.y * camera.zoom;
 
   updateZoomUI();
+  redraw = true;
   render();
 }
 
@@ -267,6 +291,7 @@ function changeZoom(amount) {
   camera.zoom += amount;
   camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 5);
   updateZoomUI();
+  redraw = true;
   render();
 }
 
