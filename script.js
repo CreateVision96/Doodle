@@ -14,19 +14,26 @@ const zoomValue = document.getElementById("zoomValue");
 const undoButton = document.getElementById("undoBtn");
 const redoButton = document.getElementById("redoBtn");
 
-const pressureButton = document.getElementById("pressToggle");
+const pressureButton = document.getElementById("pressTgl");
+
+let brush = {
+  width: 10,
+  opacity: 1,
+  color: "#111111",
+  pressure: true,
+};
+
+const savedSettings = JSON.parse(localStorage.getItem("doodleSettings")) || {};
+
+brush.color = savedSettings.color || brush.color;
+brush.width = savedSettings.width || brush.width;
+brush.opacity = savedSettings.opacity ?? brush.opacity;
+brush.pressure = savedSettings.pressure ?? brush.pressure;
 
 let camera = {
   x: 0,
   y: 0,
   zoom: 1,
-};
-
-let brush = {
-  width: 2,
-  opacity: 1,
-  color: "#111111",
-  pressure: true,
 };
 
 let currentTool = "draw";
@@ -47,6 +54,18 @@ let panStart = {
 };
 
 let activePointer = null;
+
+function saveSettings() {
+  localStorage.setItem(
+    "doodleSettings",
+    JSON.stringify({
+      color: brush.color,
+      width: brush.width,
+      opacity: brush.opacity,
+      pressure: brush.pressure,
+    }),
+  );
+}
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
@@ -321,9 +340,32 @@ function stopDrawing(event) {
   redrawCanvas();
 }
 
+function saveCanvasState() {
+  localStorage.setItem("doodleCanvas", JSON.stringify(objects));
+}
+
+function loadCanvasState() {
+  const saved = localStorage.getItem("doodleCanvas");
+  if (!saved) {
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      objects = parsed;
+    }
+  } catch {
+    localStorage.removeItem("doodleCanvas");
+  }
+
+  redrawCanvas();
+}
+
 function saveObject(object) {
   objects.push(object);
   redoObjects = [];
+  saveCanvasState();
 }
 
 function undo() {
@@ -334,6 +376,7 @@ function undo() {
   const object = objects.pop();
 
   redoObjects.push(object);
+  saveCanvasState();
   redrawCanvas();
 }
 
@@ -345,6 +388,7 @@ function redo() {
   const object = redoObjects.pop();
 
   objects.push(object);
+  saveCanvasState();
   redrawCanvas();
 }
 
@@ -506,13 +550,8 @@ function hslToHex(h, s, l) {
   );
 }
 
-function setColor(color) {
-  brush.color = color;
-  colorBtn.style.background = color;
-  hexInput.value = color.replace("#", "").toUpperCase();
-
+function updateShades(color) {
   const [h, s] = hexToHsl(color);
-
   shadeRow.innerHTML = "";
 
   [12, 22, 34, 48, 62, 76, 90].forEach((lightness) => {
@@ -524,6 +563,14 @@ function setColor(color) {
 
     shadeRow.appendChild(button);
   });
+}
+
+function setColor(color) {
+  brush.color = color;
+  colorBtn.style.background = color;
+  hexInput.value = color.replace("#", "").toUpperCase();
+  updateShades(color);
+  saveSettings();
 }
 
 colors.forEach((color) => {
@@ -569,19 +616,30 @@ widthSlider.addEventListener("input", () => {
   brush.width = Number(widthSlider.value);
 
   widthValue.textContent = brush.width + " px";
+
+  saveSettings();
 });
+
+widthSlider.value = brush.width;
+widthValue.textContent = brush.width + " px";
 
 opacitySlider.addEventListener("input", () => {
   brush.opacity = Number(opacitySlider.value) / 100;
 
   opacityValue.textContent = opacitySlider.value + "%";
+
+  saveSettings();
 });
 
 if (pressureButton) {
+  pressureButton.classList.toggle("active", brush.pressure);
+
   pressureButton.addEventListener("click", () => {
     brush.pressure = !brush.pressure;
 
     pressureButton.classList.toggle("active", brush.pressure);
+
+    saveSettings();
   });
 }
 

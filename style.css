@@ -91,14 +91,20 @@ body {
   border: none;
   border-radius: var(--radius);
   background: transparent;
+  color: var(--text);
   cursor: pointer;
   transition: background var(--transition);
 }
 
-.tool img {
+.tool img,
+.menuBtn img,
+.pressToggle img,
+.eyedropButton img {
+  display: block;
   width: var(--icon-size);
   height: var(--icon-size);
   object-fit: contain;
+  color: inherit;
 }
 
 .tool:hover {
@@ -107,9 +113,13 @@ body {
 
 .tool.active {
   background: var(--surface-active);
+  color: #fff;
 }
 
-.tool.active img {
+.tool.active img,
+.menuBtn:hover img,
+.pressToggle.active img,
+.eyedropButton:hover img {
   filter: invert(1);
 }
 
@@ -146,10 +156,6 @@ body {
   gap: 18px;
   transform: translateY(-50%);
   z-index: 10;
-}
-
-.stylePanel .pressureSetting {
-  display: none;
 }
 
 .setting {
@@ -206,6 +212,7 @@ body {
   align-items: center;
   justify-content: center;
   background: transparent;
+  color: var(--text);
 }
 
 .pressToggle img {
@@ -215,10 +222,7 @@ body {
 
 .pressToggle.active {
   background: var(--surface-active);
-}
-
-.pressToggle.active img {
-  filter: invert(1);
+  color: #fff;
 }
 
 .ClrPanel {
@@ -321,6 +325,7 @@ body {
   width: 16px;
   height: 16px;
 }
+
 .widthSlider,
 .opacitySlider {
   width: 3px;
@@ -382,10 +387,54 @@ body {
   line-height: 14px;
 }
 
-.zoomControls {
+.btm {
   position: fixed;
   right: 18px;
   bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.pressureBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.pressureBtn img {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+}
+
+.pressureBtn:hover {
+  background: var(--surface-hover);
+}
+
+.pressureBtn.active {
+  background: var(--surface-active);
+}
+
+.pressureBtn.active img {
+  filter: invert(1);
+}
+
+.pressureBtn:focus,
+.pressureBtn:focus-visible {
+  outline: none;
+}
+
+.zoomControls {
   height: 40px;
   padding: 4px;
   display: flex;
@@ -419,6 +468,7 @@ body {
   color: var(--muted);
   font-size: 11px;
 }
+
 .menuBtn {
   position: fixed;
   left: 18px;
@@ -434,7 +484,6 @@ body {
   box-shadow: var(--shadow);
   cursor: pointer;
   z-index: 31;
-
   transition: background var(--transition);
 }
 
@@ -469,7 +518,6 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-
   z-index: 30;
 }
 
@@ -500,7 +548,6 @@ body {
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-
   transition: background var(--transition);
 }
 

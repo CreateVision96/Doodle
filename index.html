@@ -122,12 +122,7 @@
             <span id="widthValue">2 px</span>
           </div>
         </div>
-        <div class="setting pressureSetting">
-          <span class="settingTitle">Pressure</span>
-          <button class="pressToggle" id="pressToggle">
-            <img src="icons/press.svg" />
-          </button>
-        </div>
+
         <div class="setting opacitySetting">
           <span class="settingTitle">Opacity</span>
           <input
@@ -144,10 +139,16 @@
         </div>
       </div>
 
-      <div class="zoomControls">
-        <button class="zoomButton" id="zoomOut">-</button>
-        <span class="zoomValue" id="zoomValue">100%</span>
-        <button class="zoomButton" id="zoomIn">+</button>
+      <div class="btm">
+        <button class="pressureBtn" id="pressTgl" title="Pressure">
+          <img src="icons/line-squiggle.svg" />
+        </button>
+
+        <div class="zoomControls">
+          <button class="zoomButton" id="zoomOut">-</button>
+          <span class="zoomValue" id="zoomValue">100%</span>
+          <button class="zoomButton" id="zoomIn">+</button>
+        </div>
       </div>
     </main>
     <script src="script.js"></script>
