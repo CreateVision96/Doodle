@@ -40,10 +40,6 @@
       <canvas id="canvas"></canvas>
       <aside class="toolbar">
         <div class="toolGroup">
-          <button class="tool active" id="selectTool" title="Select">
-            <img src="icons/select.svg" alt="Select" />
-          </button>
-
           <button class="tool" id="drawTool" title="Draw">
             <img src="icons/draw.svg" alt="Draw" />
           </button>
@@ -67,10 +63,6 @@
           <button class="tool" id="arrowTool" title="Arrow">
             <img src="icons/arrow.svg" alt="Arrow" />
           </button>
-
-          <button class="tool" id="textTool" title="Text">
-            <img src="icons/text.svg" alt="Text" />
-          </button>
         </div>
 
         <div class="historyTools">
@@ -86,10 +78,35 @@
         </div>
       </aside>
       <div class="stylePanel">
-        <div class="setting colorSetting">
+        <div class="setting ClrSetting">
           <span class="settingClr">Color</span>
-          <button class="ClrBtn" id="ClrBtn"></button>
-          <input type="color" id="colorPicker" value="#111111" />
+
+          <button class="ClrButton" id="ClrButton"></button>
+        </div>
+
+        <div class="ClrPanel" id="ClrPanel">
+          <div class="ClrPanelTitle">Stroke</div>
+          <div class="ClrPanelLabel">Colors</div>
+          <div class="ClrGrid" id="ClrGrid"></div>
+          <div class="ClrPanelLabel">Shades</div>
+          <div class="shadeRow" id="shadeRow"></div>
+          <div class="ClrPanelLabel">Hex code</div>
+          <div class="hexRow">
+            <span class="hexHash">#</span>
+
+            <input
+              type="text"
+              class="hexInput"
+              id="hexInput"
+              maxlength="6"
+              value="111111"
+              spellcheck="false"
+            />
+
+            <button class="eyedropButton" id="eyedropButton">
+              <img src="icons/pipette.svg" />
+            </button>
+          </div>
         </div>
         <div class="setting">
           <span class="settingTitle">Stroke width</span>
@@ -99,13 +116,13 @@
             id="widthSlider"
             min="1"
             max="50"
-            value="2"
+            value="10"
           />
           <div class="sliderValues">
             <span id="widthValue">2 px</span>
           </div>
         </div>
-        <div class="setting">
+        <div class="setting pressureSetting">
           <span class="settingTitle">Pressure</span>
           <button class="pressToggle" id="pressToggle">
             <img src="icons/press.svg" />

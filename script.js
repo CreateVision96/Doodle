@@ -11,9 +11,6 @@ const zoomOut = document.getElementById("zoomOut");
 const zoomIn = document.getElementById("zoomIn");
 const zoomValue = document.getElementById("zoomValue");
 
-const colorButton = document.getElementById("ClrBtn");
-const colorPicker = document.getElementById("colorPicker");
-
 const undoButton = document.getElementById("undoBtn");
 const redoButton = document.getElementById("redoBtn");
 
@@ -32,7 +29,7 @@ let brush = {
   pressure: true,
 };
 
-let currentTool = "select";
+let currentTool = "draw";
 
 let objects = [];
 let redoObjects = [];
@@ -124,22 +121,37 @@ function drawFreehand(object) {
     ctx.globalCompositeOperation = "destination-out";
   }
 
-  ctx.beginPath();
-  ctx.moveTo(object.points[0].x, object.points[0].y);
-
-  for (let i = 1; i < object.points.length; i++) {
-    const point = object.points[i];
-
-    let width = object.width;
-    if (object.pressure) {
-      const pressure = point.pressure || 0.5;
-      width *= 0.4 + pressure * 1.6;
+  const getWidth = (point) => {
+    if (!object.pressure) {
+      return object.width;
     }
 
-    ctx.lineWidth = width;
-    ctx.lineTo(point.x, point.y);
+    const pressure =
+      Number.isFinite(point.pressure) && point.pressure > 0
+        ? Math.min(point.pressure, 1)
+        : 0.5;
+
+    return object.width * (0.4 + pressure * 1.6);
+  };
+
+  if (object.points.length === 1) {
+    const point = object.points[0];
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, getWidth(point) / 2, 0, Math.PI * 2);
+    ctx.fill();
+    return;
   }
-  ctx.stroke();
+
+  for (let i = 1; i < object.points.length; i++) {
+    const previous = object.points[i - 1];
+    const point = object.points[i];
+
+    ctx.lineWidth = (getWidth(previous) + getWidth(point)) / 2;
+    ctx.beginPath();
+    ctx.moveTo(previous.x, previous.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+  }
 }
 
 function drawLine(start, end) {
@@ -222,9 +234,6 @@ function startDrawing(event) {
   const point = screenToCanvas(event.clientX, event.clientY);
 
   activePointer = event.pointerId;
-  if (currentTool === "select") {
-    return;
-  }
 
   drawing = true;
   startPoint = point;
@@ -415,17 +424,146 @@ document.querySelectorAll(".tool").forEach((button) => {
   });
 });
 
-colorButton.addEventListener("click", () => {
-  colorPicker.click();
+const colorBtn = document.getElementById("ClrButton");
+const colorPanel = document.getElementById("ClrPanel");
+const colorGrid = document.getElementById("ClrGrid");
+const shadeRow = document.getElementById("shadeRow");
+const hexInput = document.getElementById("hexInput");
+const eyedropBtn = document.getElementById("eyedropButton");
+
+const colors = [
+  "#111111",
+  "#ffffff",
+  "#ff3b30",
+  "#ff9500",
+  "#ffcc00",
+  "#34c759",
+  "#00c7be",
+  "#30b0ff",
+  "#5856d6",
+  "#af52de",
+  "#ff2d55",
+  "#8e8e93",
+];
+
+function hexToHsl(hex) {
+  const [r, g, b] = hexToRgb(hex).map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+
+  let h = 0;
+
+  if (d) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+
+  const l = (max + min) / 2;
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+
+  return [h, s * 100, l * 100];
+}
+
+function hexToRgb(hex) {
+  hex = hex.replace("#", "");
+  return [
+    parseInt(hex.slice(0, 2), 16),
+    parseInt(hex.slice(2, 4), 16),
+    parseInt(hex.slice(4, 6), 16),
+  ];
+}
+
+function hslToHex(h, s, l) {
+  s /= 100;
+  l /= 100;
+
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+
+  let r, g, b;
+
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+
+  return (
+    "#" +
+    [r, g, b]
+      .map((v) =>
+        Math.round((v + m) * 255)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
+}
+
+function setColor(color) {
+  brush.color = color;
+  colorBtn.style.background = color;
+  hexInput.value = color.replace("#", "").toUpperCase();
+
+  const [h, s] = hexToHsl(color);
+
+  shadeRow.innerHTML = "";
+
+  [12, 22, 34, 48, 62, 76, 90].forEach((lightness) => {
+    const shade = hslToHex(h, s, lightness);
+    const button = document.createElement("button");
+
+    button.style.background = shade;
+    button.onclick = () => setColor(shade);
+
+    shadeRow.appendChild(button);
+  });
+}
+
+colors.forEach((color) => {
+  const button = document.createElement("button");
+
+  button.style.background = color;
+  button.onclick = () => setColor(color);
+
+  colorGrid.appendChild(button);
 });
 
-colorPicker.addEventListener("input", () => {
-  brush.color = colorPicker.value;
+colorBtn.onclick = (e) => {
+  e.stopPropagation();
+  colorPanel.classList.toggle("active");
+};
 
-  colorButton.style.background = brush.color;
-});
+colorPanel.onclick = (e) => e.stopPropagation();
 
-colorButton.style.background = brush.color;
+hexInput.oninput = () => {
+  const value = hexInput.value.replace("#", "");
+
+  if (/^[0-9a-fA-F]{6}$/.test(value)) {
+    setColor("#" + value);
+  }
+};
+
+eyedropBtn.onclick = async () => {
+  if (!window.EyeDropper) return;
+
+  try {
+    const result = await new EyeDropper().open();
+    setColor(result.sRGBHex);
+  } catch {}
+};
+
+document.onclick = () => {
+  colorPanel.classList.remove("active");
+};
+
+setColor(brush.color);
 
 widthSlider.addEventListener("input", () => {
   brush.width = Number(widthSlider.value);
