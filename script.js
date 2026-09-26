@@ -71,6 +71,7 @@ function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  updateZoom();
   redrawCanvas();
 }
 
@@ -152,7 +153,6 @@ function drawFreehand(object) {
 
     return object.width * (0.4 + pressure * 1.6);
   };
-
   if (object.points.length === 1) {
     const point = object.points[0];
     ctx.beginPath();
@@ -160,7 +160,6 @@ function drawFreehand(object) {
     ctx.fill();
     return;
   }
-
   for (let i = 1; i < object.points.length; i++) {
     const previous = object.points[i - 1];
     const point = object.points[i];
@@ -267,7 +266,6 @@ function startDrawing(event) {
       },
     ];
   }
-
   canvas.setPointerCapture(event.pointerId);
   redrawCanvas();
 }
@@ -331,7 +329,6 @@ function stopDrawing(event) {
       opacity: brush.opacity,
     });
   }
-
   drawing = false;
   points = [];
   startPoint = null;
@@ -349,7 +346,6 @@ function loadCanvasState() {
   if (!saved) {
     return;
   }
-
   try {
     const parsed = JSON.parse(saved);
     if (Array.isArray(parsed)) {
@@ -358,7 +354,6 @@ function loadCanvasState() {
   } catch {
     localStorage.removeItem("doodleCanvas");
   }
-
   redrawCanvas();
 }
 
@@ -372,7 +367,6 @@ function undo() {
   if (objects.length === 0) {
     return;
   }
-
   const object = objects.pop();
 
   redoObjects.push(object);
@@ -384,7 +378,6 @@ function redo() {
   if (redoObjects.length === 0) {
     return;
   }
-
   const object = redoObjects.pop();
 
   objects.push(object);
@@ -396,12 +389,9 @@ function startPan(event) {
   if (event.button !== 1) {
     return;
   }
-
   isPanning = true;
-
   panStart.x = event.clientX - camera.x;
   panStart.y = event.clientY - camera.y;
-
   canvas.style.cursor = "grabbing";
 }
 
@@ -409,7 +399,6 @@ function movePan(event) {
   if (!isPanning) {
     return;
   }
-
   camera.x = event.clientX - panStart.x;
   camera.y = event.clientY - panStart.y;
 
@@ -426,9 +415,14 @@ function updateZoom() {
 }
 
 function changeZoom(amount) {
-  camera.zoom += amount;
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const beforeZoom = screenToCanvas(centerX, centerY);
 
+  camera.zoom *= 1 + amount;
   camera.zoom = Math.max(0.1, Math.min(camera.zoom, 5));
+  camera.x = centerX - beforeZoom.x * camera.zoom;
+  camera.y = centerY - beforeZoom.y * camera.zoom;
 
   updateZoom();
   redrawCanvas();
@@ -560,7 +554,6 @@ function updateShades(color) {
 
     button.style.background = shade;
     button.onclick = () => setColor(shade);
-
     shadeRow.appendChild(button);
   });
 }
@@ -588,7 +581,6 @@ colorBtn.onclick = (e) => {
 };
 
 colorPanel.onclick = (e) => e.stopPropagation();
-
 hexInput.oninput = () => {
   const value = hexInput.value.replace("#", "");
 
@@ -599,13 +591,11 @@ hexInput.oninput = () => {
 
 eyedropBtn.onclick = async () => {
   if (!window.EyeDropper) return;
-
   try {
     const result = await new EyeDropper().open();
     setColor(result.sRGBHex);
   } catch {}
 };
-
 document.onclick = () => {
   colorPanel.classList.remove("active");
 };
@@ -614,7 +604,6 @@ setColor(brush.color);
 
 widthSlider.addEventListener("input", () => {
   brush.width = Number(widthSlider.value);
-
   widthValue.textContent = brush.width + " px";
 
   saveSettings();
@@ -625,18 +614,14 @@ widthValue.textContent = brush.width + " px";
 
 opacitySlider.addEventListener("input", () => {
   brush.opacity = Number(opacitySlider.value) / 100;
-
   opacityValue.textContent = opacitySlider.value + "%";
-
   saveSettings();
 });
 
 if (pressureButton) {
   pressureButton.classList.toggle("active", brush.pressure);
-
   pressureButton.addEventListener("click", () => {
     brush.pressure = !brush.pressure;
-
     pressureButton.classList.toggle("active", brush.pressure);
 
     saveSettings();
@@ -645,6 +630,8 @@ if (pressureButton) {
 
 undoButton.addEventListener("click", undo);
 redoButton.addEventListener("click", redo);
+zoomOut.addEventListener("click", () => changeZoom(-0.1));
+zoomIn.addEventListener("click", () => changeZoom(0.1));
 
 document.addEventListener("keydown", (event) => {
   if (!event.ctrlKey) {
