@@ -1,6 +1,9 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+const strokeCanvas = document.createElement("canvas");
+const strokeCtx = strokeCanvas.getContext("2d");
+
 const widthSlider = document.getElementById("widthSlider");
 const widthValue = document.getElementById("widthValue");
 
@@ -71,6 +74,9 @@ function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  strokeCanvas.width = canvas.width;
+  strokeCanvas.height = canvas.height;
+
   updateZoom();
   redrawCanvas();
 }
@@ -110,7 +116,7 @@ function drawObject(object) {
   ctx.lineJoin = "round";
 
   if (object.type === "draw" || object.type === "eraser") {
-    drawFreehand(object);
+    draw(object);
   }
 
   if (object.type === "line") {
@@ -132,44 +138,54 @@ function drawObject(object) {
   ctx.restore();
 }
 
-function drawFreehand(object) {
-  if (!object.points || object.points.length === 0) {
+function draw(object) {
+  if (!object.points || object.points.length < 2) {
     return;
   }
 
-  if (object.type === "eraser") {
-    ctx.globalCompositeOperation = "destination-out";
-  }
+  strokeCtx.setTransform(1, 0, 0, 1, 0, 0);
+  strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
+  strokeCtx.setTransform(camera.zoom, 0, 0, camera.zoom, camera.x, camera.y);
 
-  const getWidth = (point) => {
-    if (!object.pressure) {
-      return object.width;
-    }
+  strokeCtx.lineCap = "round";
+  strokeCtx.lineJoin = "round";
+  strokeCtx.globalAlpha = 1;
 
-    const pressure =
-      Number.isFinite(point.pressure) && point.pressure > 0
-        ? Math.min(point.pressure, 1)
-        : 0.5;
+  strokeCtx.strokeStyle = object.type === "eraser" ? "#000000" : object.color;
 
-    return object.width * (0.4 + pressure * 1.6);
-  };
-  if (object.points.length === 1) {
-    const point = object.points[0];
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, getWidth(point) / 2, 0, Math.PI * 2);
-    ctx.fill();
-    return;
-  }
   for (let i = 1; i < object.points.length; i++) {
     const previous = object.points[i - 1];
     const point = object.points[i];
 
-    ctx.lineWidth = (getWidth(previous) + getWidth(point)) / 2;
-    ctx.beginPath();
-    ctx.moveTo(previous.x, previous.y);
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
+    let width = object.width;
+
+    if (object.pressure) {
+      const pressure = point.pressure || 0.5;
+      width = object.width * (0.4 + pressure * 1.6);
+    }
+
+    strokeCtx.lineWidth = width;
+    strokeCtx.beginPath();
+    strokeCtx.moveTo(previous.x, previous.y);
+    strokeCtx.lineTo(point.x, point.y);
+    strokeCtx.stroke();
   }
+
+  ctx.globalAlpha = object.opacity;
+
+  if (object.type === "eraser") {
+    ctx.globalCompositeOperation = "destination-out";
+  } else {
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(strokeCanvas, 0, 0);
+
+  ctx.setTransform(camera.zoom, 0, 0, camera.zoom, camera.x, camera.y);
+
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
 }
 
 function drawLine(start, end) {
