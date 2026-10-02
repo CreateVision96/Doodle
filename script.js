@@ -153,9 +153,16 @@ function updateMinimap() {
       minimapCtx.lineTo(p.x * scale, p.y * scale);
     });
 
-    minimapCtx.strokeStyle = obj.color || "#111";
-    minimapCtx.lineWidth = 1;
+    if (obj.type === "eraser") {
+      minimapCtx.globalCompositeOperation = "destination-out";
+      minimapCtx.lineWidth = Math.max(2, obj.width * scale);
+    } else {
+      minimapCtx.globalCompositeOperation = "source-over";
+      minimapCtx.strokeStyle = obj.color || "#111";
+      minimapCtx.lineWidth = 1;
+    }
     minimapCtx.stroke();
+    minimapCtx.globalCompositeOperation = "source-over";
   });
 
   minimapCtx.restore();
