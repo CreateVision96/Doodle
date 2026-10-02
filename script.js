@@ -14,10 +14,30 @@ const zoomOut = document.getElementById("zoomOut");
 const zoomIn = document.getElementById("zoomIn");
 const zoomValue = document.getElementById("zoomValue");
 
+const minimapCanvas = document.getElementById("minican");
+const minimapCtx = minimapCanvas.getContext("2d");
+
+let minimapDragging = false;
+
 const undoButton = document.getElementById("undoBtn");
 const redoButton = document.getElementById("redoBtn");
 
 const pressureButton = document.getElementById("pressTgl");
+const menuButton = document.getElementById("menuBtn");
+const menuPanel = document.getElementById("menuPanel");
+
+menuButton.addEventListener("click", (event) => {
+  event.stopPropagation();
+  menuPanel.classList.toggle("active");
+});
+
+menuPanel.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
+
+document.addEventListener("click", () => {
+  menuPanel.classList.remove("active");
+});
 
 let brush = {
   width: 10,
@@ -88,6 +108,58 @@ function screenToCanvas(x, y) {
   };
 }
 
+function updateMinimap() {
+  const w = minimapCanvas.clientWidth;
+  const h = minimapCanvas.clientHeight;
+
+  minimapCanvas.width = w;
+  minimapCanvas.height = h;
+
+  minimapCtx.clearRect(0, 0, w, h);
+
+  if (!objects.length) return;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  objects.forEach((obj) => {
+    if (!obj.points) return;
+
+    obj.points.forEach((p) => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    });
+  });
+
+  const scale = Math.min(w / (maxX - minX || 1), h / (maxY - minY || 1));
+
+  minimapCtx.save();
+  minimapCtx.translate(
+    (w - (maxX - minX) * scale) / 2 - minX * scale,
+    (h - (maxY - minY) * scale) / 2 - minY * scale,
+  );
+
+  objects.forEach((obj) => {
+    if (!obj.points || obj.points.length < 2) return;
+
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(obj.points[0].x * scale, obj.points[0].y * scale);
+
+    obj.points.slice(1).forEach((p) => {
+      minimapCtx.lineTo(p.x * scale, p.y * scale);
+    });
+
+    minimapCtx.strokeStyle = obj.color || "#111";
+    minimapCtx.lineWidth = 1;
+    minimapCtx.stroke();
+  });
+
+  minimapCtx.restore();
+}
 function redrawCanvas() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -102,6 +174,7 @@ function redrawCanvas() {
   }
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  updateMinimap();
 }
 
 function drawObject(object) {
@@ -400,6 +473,45 @@ function redo() {
   saveCanvasState();
   redrawCanvas();
 }
+
+function closeMenu() {
+  menuPanel.classList.remove("active");
+}
+
+document.getElementById("newCanvas").addEventListener("click", () => {
+  objects = [];
+  redoObjects = [];
+  camera = { x: 0, y: 0, zoom: 1 };
+  saveCanvasState();
+  redrawCanvas();
+  closeMenu();
+});
+
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const link = document.createElement("a");
+  link.download = "doodle.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  closeMenu();
+});
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+  objects = [];
+  redoObjects = [];
+  saveCanvasState();
+  redrawCanvas();
+  closeMenu();
+});
+
+document.getElementById("shortcutsBtn").addEventListener("click", () => {
+  alert("Keyboard shortcuts:\nCtrl+Z: Undo\nCtrl+Shift+Z or Ctrl+Y: Redo");
+  closeMenu();
+});
+
+document.getElementById("abtBtn").addEventListener("click", () => {
+  alert("Doodle\nA simple canvas for quick sketches.");
+  closeMenu();
+});
 
 function startPan(event) {
   if (event.button !== 1) {
